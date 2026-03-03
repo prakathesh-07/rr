@@ -1,20 +1,17 @@
 pipeline {
     agent any
-    environment {
-        IMAGE_NAME = "rr:latest"
-        CONTAINER_NAME = "rr_container"
-    }
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/prakathesh-07/rr.git'
+                git url: 'https://github.com/prakathesh-07/rr.git', branch: 'main'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build(IMAGE_NAME)
+                    // Build the Docker image
+                    docker.build('my-image-name:latest')
                 }
             }
         }
@@ -22,7 +19,9 @@ pipeline {
         stage('Stop Old Container') {
             steps {
                 script {
-                    sh "docker rm -f ${CONTAINER_NAME} || true"
+                    // Stop old container if running
+                    sh "docker stop my-container || true"
+                    sh "docker rm my-container || true"
                 }
             }
         }
@@ -30,18 +29,16 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 script {
-                    docker.image(IMAGE_NAME).run("-d -p 80:80 --name ${CONTAINER_NAME}")
+                    // Run new container
+                    sh "docker run -d --name my-container -p 8080:8080 my-image-name:latest"
                 }
             }
         }
     }
-
     post {
-        success {
-            echo "Deployment Successful! Visit http://<server-ip>"
-        }
         failure {
-            echo "Deployment failed."
+            echo 'Deployment failed.'
         }
     }
 }
+            
